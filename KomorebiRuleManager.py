@@ -6,13 +6,41 @@ from subprocess import CREATE_NO_WINDOW, run
 from time import sleep
 
 
-def parse_config() -> str:
+def parse_config() -> tuple[str, str]:
     """
-    Parse settings.ini
+    Parse preferred hotkey handler and bar usage option from settings.ini
     """
+    # Parse settings.ini into a Python dictionary
     config = ConfigParser()
     config.read(Path(__file__).parent / "settings.ini")
-    return config["hotkeys"]["handler"].replace('"', "")
+    settings = config["settings"]
+
+    # Prepare hotkey handler argument if provided
+    hotkey_handler = settings.get("hotkey_handler", "")
+    if hotkey_handler:
+        hotkey_handler = "--" + hotkey_handler
+
+    # Get use_bar value from settings
+    bar = settings.get("use_bar", "")
+    use_bar = False
+
+    # Prepare bar argument if provided
+    if bar:
+        match bar.replace('"', "").lower():
+            case "true":
+                use_bar = True
+            case "false":
+                use_bar = False
+            case "1":
+                use_bar = True
+            case "0":
+                use_bar = False
+
+    # Return hotkey handler and use_bar args
+    return (
+        hotkey_handler,
+        "--bar" if use_bar else "",
+    )
 
 
 KOMOREBI = run(
@@ -21,10 +49,11 @@ KOMOREBI = run(
     capture_output=True,
     text=True,
 ).stdout.strip()
-HOTKEY_HANDLER = "--" + parse_config()
 
-STOP = ["powershell", "-Command", "komorebic stop", HOTKEY_HANDLER]
-START = ["powershell", "-Command", "komorebic start", HOTKEY_HANDLER]
+HOTKEY_HANDLER, USE_BAR = parse_config()
+
+STOP = ["powershell", "-Command", "komorebic stop", HOTKEY_HANDLER, USE_BAR]
+START = ["powershell", "-Command", "komorebic start", HOTKEY_HANDLER, USE_BAR]
 
 
 def parse_args() -> Namespace:

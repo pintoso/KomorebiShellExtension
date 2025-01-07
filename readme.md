@@ -27,10 +27,12 @@ cd KomorebiShellExtension
 Create a `settings.ini` file in the same directory as `KomorebiRuleManager.py` with the following structure:
 
 ```ini
-[hotkeys]
-handler = "your-hotkey-handler"
+[settings]
+hotkey_handler = "your-hotkey-handler"
+use_bar = true
 ```
 Replace `your-hotkey-handler` with your Komorebi hotkey handler. It's usually either `ahk` or `whkd`.
+Decide whether or not to use the Komorebi bar by setting `use_bar` to `true` or `false`.
 **Note:** This can be changed anytime.
 
 ### Step 3: Run the PowerShell Installation Script
