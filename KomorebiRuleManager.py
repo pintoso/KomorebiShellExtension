@@ -25,16 +25,8 @@ def parse_config() -> tuple[str, str]:
     use_bar = False
 
     # Prepare bar argument if provided
-    if bar:
-        match bar.replace('"', "").lower():
-            case "true":
-                use_bar = True
-            case "false":
-                use_bar = False
-            case "1":
-                use_bar = True
-            case "0":
-                use_bar = False
+    if bar.replace('"', "").lower() in ["true", "1"]:
+        use_bar = True
 
     # Return hotkey handler and use_bar args
     return (
