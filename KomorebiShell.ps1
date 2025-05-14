@@ -1,51 +1,61 @@
+# Working directory
 $wrkDir = $env:WRK_DIR
-$komorebiRulePath = @()
+if (-not $wrkDir) { $wrkDir = (Get-Location).Path }
 
-# Find the path to KomorebiRuleManager.py
-
-if (-not $wrkDir)
-{
-    $wrkDir = Get-Location
-    $komorebiRulePath = Join-Path -Path $wrkDir -ChildPath "KomorebiRuleManager.py"
-} else
-{
-    $komorebiRulePath = Join-Path -Path $wrkDir -ChildPath "Python"
-    $komorebiRulePath = Join-Path -Path $komorebiRulePath -ChildPath "KomorebiRuleManager.py"
+# Path to Python script
+$komorebiRulePath = Join-Path $wrkDir "KomorebiRuleManager.py"
+if (-not (Test-Path $komorebiRulePath)) {
+    $komorebiRulePath = Join-Path $wrkDir "Python\KomorebiRuleManager.py"
 }
 
-# Find the path to Pythonw.exe
-
-$pythonPath = ""
-try
-{
-    $pythonPath = Get-Command "pythonw.exe" -ErrorAction Stop
-    $pythonPath = $pythonPath.Source
-} catch
-{
-    Write-Host "Python not found. Please install Python and try again."
+# Location of pythonw.exe
+try {
+    $pythonPath = (Get-Command "pythonw.exe" -ErrorAction Stop).Source
+} catch {
+    Write-Host "Python not found. Please install Python and try again." -ForegroundColor Red
     exit
 }
 
-# Add ignore rule keys
+# Icons - Using the script's directory
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$iconKomorebi    = Join-Path $scriptDir "komorebi.ico"
+$iconKomorebiOff = Join-Path $scriptDir "komorebi_off.ico"
 
-$fileKeyPath = "Registry::HKEY_CURRENT_USER\Software\Classes\*\shell\komorebiignore"
-$fileCommandKeyPath = "Registry::HKEY_CURRENT_USER\Software\Classes\*\shell\Komorebiignore\command"
+#------------------ CREATION ------------------------------------
+$baseKey = "Registry::HKEY_CURRENT_USER\Software\Classes\exefile\shell\Komorebi"
 
-New-Item -Path $fileKeyPath -Force | Out-Null
-Set-ItemProperty -Path $fileKeyPath -Name "(Default)" -Value "Don't manage this file with Komorebi"
-Set-ItemProperty -Path $fileKeyPath -Name "Icon" -Value "imageres.dll,251"
+# 1. Parent key (transformed into submenu)
+New-Item -Path $baseKey -Force | Out-Null
+Set-ItemProperty -Path $baseKey -Name "MUIVerb"     -Value "Komorebi"
+Set-ItemProperty -Path $baseKey -Name "Icon"        -Value $iconKomorebi
+Set-ItemProperty -Path $baseKey -Name "SubCommands" -Value ""   # ← Makes it a submenu
 
-New-Item -Path $fileCommandKeyPath -Force | Out-Null
-Set-ItemProperty -Path $fileCommandKeyPath -Name "(Default)" -Value "$pythonPath $komorebiRulePath `"%1`" exe -i"
+# 2. Shell folder (where child commands live)
+$subShell = Join-Path $baseKey "shell"
+New-Item -Path $subShell -Force | Out-Null
 
-# Add manage rule keys
+# ---------- IGNORE ----------
+$ignoreKey        = Join-Path $subShell "Ignore"
+$ignoreCommandKey = Join-Path $ignoreKey "command"
 
-$fileKeyPath = "Registry::HKEY_CURRENT_USER\Software\Classes\*\shell\komorebimanage"
-$fileCommandKeyPath = "Registry::HKEY_CURRENT_USER\Software\Classes\*\shell\Komorebimanage\command"
+New-Item -Path $ignoreKey        -Force | Out-Null
+New-Item -Path $ignoreCommandKey -Force | Out-Null
 
-New-Item -Path $fileKeyPath -Force | Out-Null
-Set-ItemProperty -Path $fileKeyPath -Name "(Default)" -Value "Manage this file with Komorebi"
-Set-ItemProperty -Path $fileKeyPath -Name "Icon" -Value "imageres.dll,251"
+Set-ItemProperty -Path $ignoreKey -Name "MUIVerb" -Value "Ignore"
+Set-ItemProperty -Path $ignoreKey -Name "Icon"    -Value $iconKomorebiOff
+$ignoreCmd = "`"$pythonPath`" `"$komorebiRulePath`" `"%1`" exe -i"
+Set-ItemProperty -Path $ignoreCommandKey -Name "(Default)" -Value $ignoreCmd
 
-New-Item -Path $fileCommandKeyPath -Force | Out-Null
-Set-ItemProperty -Path $fileCommandKeyPath -Name "(Default)" -Value "$pythonPath $komorebiRulePath `"%1`" exe -m"
+# ---------- MANAGE ----------
+$manageKey        = Join-Path $subShell "Manage"
+$manageCommandKey = Join-Path $manageKey "command"
+
+New-Item -Path $manageKey        -Force | Out-Null
+New-Item -Path $manageCommandKey -Force | Out-Null
+
+Set-ItemProperty -Path $manageKey -Name "MUIVerb" -Value "Manage"
+Set-ItemProperty -Path $manageKey -Name "Icon"    -Value $iconKomorebi
+$manageCmd = "`"$pythonPath`" `"$komorebiRulePath`" `"%1`" exe -m"
+Set-ItemProperty -Path $manageCommandKey -Name "(Default)" -Value $manageCmd
+
+Write-Host "`n✅ Komorebi submenu created successfully!" -ForegroundColor Green
