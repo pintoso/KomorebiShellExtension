@@ -1,4 +1,10 @@
+# FORK WITH ICONS and SUBMENU
+![image](https://github.com/user-attachments/assets/e2c0a516-71d2-49fc-a3a2-f1fce01893f8)
+
+Note: I limited it to `.exe` files since it makes more sense for my use
+
 # KomorebiShellExtension
+
 
 KomorebiShellExtension is a Python-based tool that extends the functionality of the [Komorebi](https://github.com/LGUG2Z/komorebi) tiling window manager by integrating rule management directly into the Windows context menu. This extension allows users to easily add or remove "Manage" and "Ignore" rules for applications without manually editing the `komorebi.json` configuration file.
 
@@ -19,7 +25,7 @@ KomorebiShellExtension is a Python-based tool that extends the functionality of 
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/Zira3l137/KomorebiShellExtension.git
+git clone https://github.com/pintoso/KomorebiShellExtension.git
 cd KomorebiShellExtension
 ```
 
@@ -47,9 +53,8 @@ This script:
 
 ## Usage
 
-1. **Right-Click a File**: Navigate to any file in File Explorer, right-click, and choose:
-   - "Manage this file with Komorebi"
-   - "Don't manage this file with Komorebi"
+1. **Right-Click a File (.exe)**: and choose:
+   - Komorebi ► Ignore | Manage
 
 2. **Command Line Options**: You can also run the script manually:
    ```bash
